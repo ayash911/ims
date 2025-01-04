@@ -22,13 +22,25 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Serve frontend
+
 @app.route("/")
-def serve_frontend():
-    return send_from_directory(os.path.join(os.path.dirname(__file__), "../frontend"), "index.html")
+def index():
+    return send_from_directory(os.path.join(os.path.dirname(__file__), "../frontend/html"), "index.html")
+
+@app.route("/html/<path:path>")
+def serve_frontend(path):
+    try:
+        return send_from_directory(os.path.join(os.path.dirname(__file__), "../frontend/html"), path)
+    except FileNotFoundError:
+        return jsonify({'error': f'HTML file {path} not found'}), 404
 
 @app.route("/assets/<path:path>")
 def serve_static_files(path):
-    return send_from_directory(os.path.join(os.path.dirname(__file__), "../frontend/assets"), path)
+    try:
+        return send_from_directory(os.path.join(os.path.dirname(__file__), "../frontend/assets"), path)
+    except FileNotFoundError:
+        return jsonify({'error': f'Static file {path} not found'}), 404
+
 
 # Error handlers
 @app.errorhandler(404)
