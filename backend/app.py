@@ -1,9 +1,10 @@
-from flask import Flask, send_from_directory, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
-from config import db  # Import the db instance
+from config import db
+
 
 app = Flask(__name__, static_folder="../frontend/assets", template_folder="../frontend")
 
@@ -22,7 +23,6 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 # Serve frontend
-
 @app.route("/")
 def index():
     return send_from_directory(os.path.join(os.path.dirname(__file__), "../frontend/html"), "index.html")
@@ -41,7 +41,6 @@ def serve_static_files(path):
     except FileNotFoundError:
         return jsonify({'error': f'Static file {path} not found'}), 404
 
-
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
@@ -50,6 +49,8 @@ def not_found(error):
 @app.errorhandler(500)
 def internal_server_error(error):
     return jsonify({'error': 'Internal server error'}), 500
+
+# Add product
 
 # Import and register blueprints
 from routes.product_routes import product_routes

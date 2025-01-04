@@ -1,102 +1,69 @@
--- -- Products Table
--- CREATE TABLE products (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     name VARCHAR(100) NOT NULL,
---     barcode VARCHAR(50) UNIQUE NOT NULL,
---     description TEXT,
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- );
+drop DATABASE if exists ims;
+CREATE DATABASE ims;
 
--- -- Inventory Table
--- CREATE TABLE inventory (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     product_id INT NOT NULL,
---     location ENUM('manufacturing', 'warehouse', 'loading_area') NOT NULL,
---     quantity INT DEFAULT 0,
---     FOREIGN KEY (product_id) REFERENCES products(id)
--- );
+USE ims;
 
--- -- Orders Table
--- CREATE TABLE orders (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     product_id INT NOT NULL,
---     quantity INT NOT NULL,
---     status ENUM('pending', 'fulfilled', 'in_production') DEFAULT 'pending',
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
---     FOREIGN KEY (product_id) REFERENCES products(id)
--- );
+-- Create 'customers' table
+CREATE TABLE customers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cust_id INT NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255),
+  phone VARCHAR(20),
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- -- Notifications Table
--- CREATE TABLE notifications (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     message TEXT NOT NULL,
---     is_read BOOLEAN DEFAULT FALSE,
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- );
-
-
--- CREATE TABLE users (
---     id INT AUTO_INCREMENT PRIMARY KEY,
---     username VARCHAR(100) NOT NULL UNIQUE,
---     password-hash VARCHAR(255) NOT NULL, -- Passwords should be hashed
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- );
-
-
--- Products Table
+-- Create 'products' table
 CREATE TABLE products (
-    id INT AUTO_INCREMENT PRIMARY KEY,                 -- Automatically incrementing ID
-    name VARCHAR(100) NOT NULL,                         -- Product name cannot be null
-    barcode VARCHAR(50) UNIQUE NOT NULL,                -- Barcode is unique and cannot be null
-    description TEXT,                                   -- Description is optional
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Automatically set the timestamp for creation
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Track updates
-    INDEX(name)                                         -- Index on name for faster search
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    barcode VARCHAR(255) UNIQUE NOT NULL,
+    grade VARCHAR(1) NOT NULL,
+    thickness VARCHAR(10) NOT NULL,
+    dimension VARCHAR(10) NOT NULL,
+    item_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Inventory Table
+-- Create 'inventory' table
 CREATE TABLE inventory (
-    id INT AUTO_INCREMENT PRIMARY KEY,                 -- Automatically incrementing ID
-    product_id INT NOT NULL,                            -- Foreign key for product
-    location ENUM('manufacturing', 'warehouse', 'loading_area') NOT NULL,  -- Location in inventory
-    quantity INT DEFAULT 0,                             -- Default quantity is 0
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp for when entry is created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Track updates
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE, -- Cascade delete if product is deleted
-    INDEX(product_id, location)                        -- Index for product_id and location for faster lookups
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  quantity INT NOT NULL,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Orders Table
+-- Create 'orders' table
 CREATE TABLE orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,                 -- Automatically incrementing ID
-    product_id INT NOT NULL,                            -- Foreign key for product
-    quantity INT NOT NULL,                              -- Quantity ordered
-    status ENUM('pending', 'fulfilled', 'in_production') DEFAULT 'pending', -- Order status
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp for when order is created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Track updates
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE, -- Cascade delete if product is deleted
-    INDEX(product_id, status)                          -- Index for product_id and status for fast query filtering
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_number VARCHAR(255) UNIQUE NOT NULL,
+  customer_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  status VARCHAR(50) CHECK (status IN ('Pending', 'Fulfilled', 'Cancelled')) DEFAULT 'Pending',
+  order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
--- Notifications Table
-CREATE TABLE notifications (
-    id INT AUTO_INCREMENT PRIMARY KEY,                 -- Automatically incrementing ID
-    message TEXT NOT NULL,                              -- Notification message cannot be null
-    is_read BOOLEAN DEFAULT FALSE,                      -- Default to unread
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp for when notification is created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Track updates
+-- Create 'order_details' table to store multiple items for an order
+CREATE TABLE order_details (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
--- Users Table
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,                 -- Automatically incrementing ID
-    username VARCHAR(100) NOT NULL UNIQUE,              -- Username must be unique
-    password_hash VARCHAR(255) NOT NULL,                -- Password hash cannot be null (Note: password-hash corrected to password_hash)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,     -- Timestamp for when user is created
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Track updates
-    INDEX(username)                                    -- Index on username for fast login query
+-- Create 'logs' table to track system events (e.g., orders, inventory updates)
+CREATE TABLE logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event_type VARCHAR(255) NOT NULL,
+  event_description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-
-ALTER TABLE inventory ADD CONSTRAINT chk_quantity CHECK (quantity >= 0);
-

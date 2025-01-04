@@ -1,3 +1,3 @@
-// Check inventory by barcode
-
-// Call fetchOrders to load orders initially
+function back() {
+  window.history.back();
+}

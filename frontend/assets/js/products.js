@@ -45,6 +45,37 @@ const fetchProducts = () => {
             barcodeValue.style.color = "#007BFF";
             barcodeValue.innerText = `${Product.barcode}`;
 
+            const grade = document.createElement("span");
+            grade.style.fontWeight = "bold";
+            grade.style.color = "#333";
+            grade.innerText = ", Grade: ";
+
+            const gradeValue = document.createElement("span");
+            gradeValue.style.fontStyle = "italic";
+            gradeValue.style.color = "#007BFF";
+            gradeValue.innerText = `${Product.grade}`;
+
+            const thickness = document.createElement("span");
+            thickness.style.fontWeight = "bold";
+            thickness.style.color = "#333";
+            thickness.innerText = ", Thickness: ";
+
+            const thicknessValue = document.createElement("span");
+            thicknessValue.style.fontStyle = "italic";
+            thicknessValue.style.color = "#007BFF";
+            thicknessValue.innerText = `${Product.thickness}`;
+
+            const dimension = document.createElement("span");
+            dimension.style.fontWeight = "bold";
+            dimension.style.color = "#333";
+            dimension.innerText = ", Dimension: ";
+
+            const dimensionValue = document.createElement("span");
+            dimensionValue.style.fontStyle = "italic";
+            dimensionValue.style.color = "#007BFF";
+            dimensionValue.innerText = `${Product.dimension}`;
+            
+
             // Append all elements to the list item
             li.appendChild(id);
             li.appendChild(idValue);
@@ -52,6 +83,13 @@ const fetchProducts = () => {
             li.appendChild(nameValue);
             li.appendChild(barcode);
             li.appendChild(barcodeValue);
+            li.appendChild(grade);
+            li.appendChild(gradeValue);
+            li.appendChild(thickness);
+            li.appendChild(thicknessValue);
+            li.appendChild(dimension);
+            li.appendChild(dimensionValue);
+            
 
             product_list.appendChild(li);
           }
@@ -68,3 +106,61 @@ const fetchProducts = () => {
 };
 
 fetchProducts();
+
+// Add product functionality
+const addProductForm = document.getElementById("addProductForm");
+addProductForm.addEventListener("submit", function(event) {
+  event.preventDefault(); // Prevent default form submission
+  
+  const formData = new FormData(addProductForm);
+  const data = {
+    grade: formData.get("grade"),
+    thickness: formData.get("thickness"),
+    dimension: formData.get("dimension")
+  };
+
+  console.log(data); // Check the data being sent
+  
+  fetch("/api/add_product", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    // alert(data.message || "Product added successfully!");
+    fetchProducts(); // Refresh the product list after adding a new product
+  })
+  .catch(error => {
+    console.error("Error adding product:", error);
+    alert("An error occurred while adding the product. Please try again.");
+  });
+});
+
+// Update thickness options based on grade
+function updateThicknessOptions() {
+  const grade = document.getElementById("grade").value;
+  const thicknessSelect = document.getElementById("thickness");
+
+  // Clear existing options
+  thicknessSelect.innerHTML = "";
+
+  // Populate based on grade
+  const options = grade === "B" ? ["05", "08", "11", "16"] : ["05", "09", "12", "18"];
+  options.forEach((thickness) => {
+    const option = document.createElement("option");
+    option.value = thickness;
+    option.innerText = thickness;
+    thicknessSelect.appendChild(option);
+  });
+}
+
+// Initialize thickness options on page load
+window.onload = updateThicknessOptions;
